@@ -1,0 +1,172 @@
+<canvas id="gc" width="400" height="400"></canvas>
+<script>
+	window.onload=function() {
+		canv=document.getElementById("gc");
+		ctx=canv.getContext("2d");
+		document.addEventListener("keydown", keyPush);
+		scoreText=document.getElementById("score");
+		scoreText.innerText="0";
+		resetButton=document.getElementById("btn");
+		resetButton.onclick=reset;
+		loseText=document.getElementById("lose");
+		loseText.style.display="none";
+		scoreBoard=document.getElementById("scoreboard");
+		nameField=document.getElementById("name");
+		setInterval(game, 1000/15);
+	};
+
+	px=py=10;
+	gs=tc=20;
+	ax=ay=15;
+	xv=1;
+	yv=0;
+	trail=[];
+	tail=5;
+	score=0;
+	pause=true;
+	scores=[];
+	name="";
+
+	function generateApple() {
+		ax=Math.floor(Math.random()*tc);
+		ay=Math.floor(Math.random()*tc);
+
+		for (var i=0; i<trail.length; i++) {
+			if (trail[i].x == ax && trail[i].y == ay) {
+				generateApple();
+				break;
+			}
+		}
+	}
+
+	function addScoreToBoard(sc) {
+		scores.push({ name, score });
+		scores.sort((a, b) => a.score < b.score);
+
+		while (scoreBoard.hasChildNodes()) {
+    	scoreBoard.removeChild(scoreBoard.lastChild);
+		}
+
+		for (var i = 0; i < scores.length; i++) {
+			index = i + 1;
+			div = document.createElement("div");
+			node = document.createTextNode(index + '. ' + scores[i].name + ' - ' + scores[i].score + ' points.');
+			div.appendChild(node);
+			scoreBoard.appendChild(div);
+		}
+	}
+
+	function game() {
+		if (pause) return;
+
+		px+=xv;
+		py+=yv;
+		if (px<0) {
+			px=tc-1;
+		}
+
+		if (px>tc-1) {
+			px=0;
+		}
+
+		if (py<0) {
+			py=tc-1;
+		}
+
+		if (py>tc-1) {
+			py=0;
+		}
+
+		ctx.fillStyle="black";
+		ctx.fillRect(0,0,canv.width,canv.height);
+
+		ctx.fillStyle="lime";
+		for (var i=0; i<trail.length; i++) {
+			ctx.fillRect(trail[i].x*gs, trail[i].y*gs,gs-2,gs-2);
+			if (trail[i].x==px && trail[i].y==py) {
+				pause=true;
+				loseText.style.display="block";
+				addScoreToBoard(score);
+				return;
+			}
+		}
+
+		trail.push({ x:px, y:py });
+		while (trail.length > tail) {
+			trail.shift();
+		}
+
+		if (ax==px && ay==py) {
+			tail++;
+			generateApple();
+			score++;
+			scoreText.innerText="" + score;
+		}
+
+		ctx.fillStyle="red";
+		ctx.fillRect(ax*gs, ay*gs, gs-2, gs-2);
+	}
+
+	function reset() {
+		pause=false;
+		px=py=10;
+		yv=0;
+		xv=1;
+		trail=[];
+		tail=5;
+		score=0;
+		scoreText.innerText="0";
+		loseText.style.display="none";
+		name=nameField.value;
+		generateApple();
+	}
+
+	function keyPush(evt) {
+		switch (evt.keyCode) {
+			case 37:
+				if (xv != 1) {
+					xv=-1;
+					yv=0;
+				}
+				break;
+
+			case 38:
+				if (yv != 1) {
+					xv=0;
+					yv=-1;
+				}
+				break;
+
+			case 39:
+				if (xv != -1) {
+					xv=1;
+					yv=0;
+				}
+				break;
+
+			case 40:
+				if (yv != -1) {
+					xv=0;
+					yv=1;
+				}
+				break;
+		}
+	}
+</script>
+<body>
+	<span id="lose">YOU LOST!!!!</span>
+	<div>YOUR SCORE IS:<span id="score"></span></div>
+	<input id="name"></input><button id="btn">Start</button>
+	<div id="scoreboard">Scoreboard:<br/></div>
+	<style>
+		body {
+			position: relative;
+		}
+
+		#scoreboard {
+			position: absolute;
+			left: 400;
+			top: 0;
+		}
+	</style>
+</body>
